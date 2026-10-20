@@ -6,6 +6,7 @@
         <fullname>Sony PlayStation</fullname>
         <path>%ROMPATH%/psx</path>
         <extension>.bin .BIN .chd .CHD .cue .CUE .iso .ISO .m3u .M3U .pbp .PBP .img .IMG .ccd .CCD .exe .EXE</extension>
+        <command label="DuckStation (Standalone)">%EMULATOR_DUCKSTATION% %ACTIVITY_CLEAR_TASK% %ACTIVITY_CLEAR_TOP% %EXTRABOOL_resumeState%=false %EXTRA_bootPath%=%ROMSAF%</command>
         <command label="DuckStation Auto Resume (2021 GPL)">%EMULATOR_DUCKSTATION-AUTORESUME% %ACTIVITY_CLEAR_TASK% %ACTIVITY_CLEAR_TOP% %EXTRABOOL_resumeState%=true %EXTRA_bootPath%=%ROMSAF%</command>
         <platform>psx</platform>
         <theme>psx</theme>
