@@ -477,12 +477,33 @@ void AndroidHostInterface::EmulationThreadEntryPoint(JNIEnv* env, jobject emulat
 
   // Boot system.
   bool boot_result = false;
-  if (resume_state && boot_params.filename.empty())
+  if (resume_state && boot_params.filename.empty() && !IsCheevosChallengeModeActive())
     boot_result = ResumeSystemFromMostRecentState();
-  else if (resume_state && CanResumeSystemFromFile(boot_params.filename.c_str()))
-    boot_result = ResumeSystemFromState(boot_params.filename.c_str(), true);
   else
+  {
     boot_result = BootSystem(boot_params);
+    // Resolve the game code after opening the disc. A launcher URI may differ from
+    // the path indexed by the game list. SaveStateOnExit controls writing only.
+    if (boot_result && resume_state && !IsCheevosChallengeModeActive())
+    {
+      const std::string& code = System::GetRunningCode();
+      if (!code.empty())
+      {
+        const std::string path = GetGameSaveStateFileName(code.c_str(), -1);
+        if (FileSystem::FileExists(path.c_str()))
+        {
+          if (LoadState(path.c_str()))
+            AddOSDMessage("Auto Resume: loaded saved state.", 5.0f);
+          else
+            AddOSDMessage("Auto Resume: state could not be loaded; check version compatibility.", 10.0f);
+        }
+        else
+          AddOSDMessage("Auto Resume: no saved state for this game; starting normally.", 5.0f);
+      }
+      else
+        AddOSDMessage("Auto Resume: game code could not be identified.", 5.0f);
+    }
+  }
 
   if (boot_result)
   {

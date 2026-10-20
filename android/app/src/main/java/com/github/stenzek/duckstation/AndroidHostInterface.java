@@ -3,13 +3,13 @@ package com.github.stenzek.duckstation;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
-import android.os.Environment;
 import android.os.Process;
 import android.util.Log;
 import android.view.Surface;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.io.File;
 import java.io.InputStream;
 import java.util.Locale;
 
@@ -184,12 +184,11 @@ public class AndroidHostInterface {
     static private String mUserDirectory;
 
     static public boolean createInstance(Context context) {
-        // Set user path.
-        mUserDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
-        if (mUserDirectory.isEmpty())
-            mUserDirectory = "/sdcard";
-
-        mUserDirectory += "/duckstation";
+        // Keep every test save, memory card and setting separate from official and legacy installs.
+        File directory = context.getExternalFilesDir(null);
+        if (directory == null)
+            directory = context.getFilesDir();
+        mUserDirectory = directory.getAbsolutePath();
         Log.i("AndroidHostInterface", "User directory: " + mUserDirectory);
         mInstance = create(context, new FileHelper(context), mUserDirectory);
         return mInstance != null;

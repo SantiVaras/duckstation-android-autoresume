@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!-- Merge this emulator entry into an existing custom file if present. -->
+<ruleList>
+    <emulator name="DUCKSTATION-AUTORESUME">
+        <rule type="androidpackage">
+            <entry>com.github.santivaras.duckstation.autoresume/com.github.stenzek.duckstation.EmulationActivity</entry>
+        </rule>
+    </emulator>
+</ruleList>
