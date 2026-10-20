@@ -23,34 +23,23 @@ jobs:
       - uses: android-actions/setup-android@v3
       - name: Install historical Android toolchain
         run: sdkmanager 'platforms;android-29' 'build-tools;30.0.2' 'ndk;21.4.7075529' 'cmake;3.22.1'
-      - name: Restore dedicated test signing key
-        env:
-          KEYSTORE_BASE64: ${{ secrets.AUTORESUME_KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.AUTORESUME_KEYSTORE_PASSWORD }}
-        run: |
-          test -n "$KEYSTORE_BASE64" && test -n "$KEYSTORE_PASSWORD"
-          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/autoresume.p12"
-          chmod 600 "$RUNNER_TEMP/autoresume.p12"
-      - name: Test launch options and build signed APK
+      - name: Test launch options and build unsigned APK
         working-directory: android
         env:
-          AUTORESUME_KEYSTORE: ${{ runner.temp }}/autoresume.p12
-          AUTORESUME_KEYSTORE_PASSWORD: ${{ secrets.AUTORESUME_KEYSTORE_PASSWORD }}
           CMAKE_BUILD_PARALLEL_LEVEL: '2'
         run: |
           chmod +x gradlew
           ./gradlew --no-daemon --max-workers=2 testReleaseUnitTest assembleRelease
-      - name: Verify signature, package and architecture
+      - name: Verify package and architecture
         run: |
           mkdir -p artifacts
-          cp android/app/build/outputs/apk/release/app-release.apk artifacts/duckstation-autoresume-arm64.apk
-          "$ANDROID_HOME/build-tools/30.0.2/apksigner" verify --verbose --print-certs artifacts/*.apk | tee artifacts/signature.txt
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk artifacts/duckstation-autoresume-arm64-unsigned.apk
           "$ANDROID_HOME/build-tools/30.0.2/aapt" dump badging artifacts/*.apk | tee artifacts/package.txt
           grep -q "package: name='com.github.santivaras.duckstation.autoresume'" artifacts/package.txt
           grep -q "native-code: 'arm64-v8a'" artifacts/package.txt
           python3 - <<'PY'
           import zipfile
-          with zipfile.ZipFile('artifacts/duckstation-autoresume-arm64.apk') as apk:
+          with zipfile.ZipFile('artifacts/duckstation-autoresume-arm64-unsigned.apk') as apk:
               libs = [name for name in apk.namelist() if name.startswith('lib/') and name.endswith('.so')]
               assert libs and all(name.startswith('lib/arm64-v8a/') for name in libs), libs
               assert 'lib/arm64-v8a/libduckstation-native.so' in libs, libs
@@ -62,7 +51,7 @@ jobs:
           sha256sum *.apk > SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: duckstation-autoresume-arm64
+          name: duckstation-autoresume-arm64-unsigned
           path: artifacts/
           if-no-files-found: error
           retention-days: 30

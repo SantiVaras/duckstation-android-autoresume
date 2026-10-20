@@ -51,8 +51,8 @@ BIOS into the new app. No BIOS or games are included.
 
 This APK is signed with a dedicated experimental key, not the official key.
 It installs alongside the official app; it cannot update that app. Keep the same
-experimental key for updates of this package. Keys/passwords are GitHub Actions
-secrets and are never included in source or downloadable build artifacts.
+experimental key for updates of this package. Keys/passwords stay on the local
+computer and are never included in source or downloadable build artifacts.
 Uninstalling either application can delete its app-specific files; export first.
 No installation, uninstallation or phone data migration is automated here.
 
@@ -114,13 +114,11 @@ adb shell am start --activity-clear-task --activity-clear-top \
 Workflow `.github/workflows/android-arm64.yml` runs on pushes to
 `android-autoresume` and manually through Actions. It uses JDK 11, Gradle 7.0.2,
 Android Gradle Plugin 4.2.1, platform 29, build-tools 30.0.2, NDK 21.4.7075529,
-CMake 3.22.1. It runs launch-option tests, builds a release APK, verifies its
-signature/package/arm64 libraries and uploads the APK, checksum, verification
-reports and corresponding source. It does not publish a public release.
-
-Required repository secrets: `AUTORESUME_KEYSTORE_BASE64` (dedicated PKCS12,
-alias `autoresume`) and `AUTORESUME_KEYSTORE_PASSWORD`. Do not use an official
-or unrelated application's signing key. Do not commit signing material.
+CMake 3.22.1. It runs launch-option tests, builds an **unsigned** release APK,
+verifies its package/arm64 libraries and uploads the APK, checksum, verification
+reports and corresponding source. The unsigned Actions artifact cannot be
+installed; it must be signed locally. No signing key is sent to GitHub and no
+repository secrets are required. It does not publish a public release.
 
 For a local unsigned build, run from `android/` with the toolchain installed:
 
@@ -129,8 +127,13 @@ For a local unsigned build, run from `android/` with the toolchain installed:
 ```
 
 For a signed local build, set `AUTORESUME_KEYSTORE` to the absolute PKCS12 path
-and `AUTORESUME_KEYSTORE_PASSWORD` before the same command. Compilation and unit
-tests do not verify gameplay or frontend integration; use the manual checklist.
+and `AUTORESUME_KEYSTORE_PASSWORD` before the same command. Alternatively, download
+the unsigned artifact, run Android SDK `zipalign -p -f 4 input.apk aligned.apk`,
+then `apksigner sign --ks /private/path/autoresume.p12 --ks-key-alias autoresume
+--out signed.apk aligned.apk`, and `apksigner verify --verbose --print-certs signed.apk`.
+Use the dedicated local key and keep it private; do not commit signing material.
+Compilation and unit tests do not verify gameplay or frontend integration; use
+the manual checklist.
 
 ## Investigation references
 
